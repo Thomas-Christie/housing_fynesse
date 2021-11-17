@@ -17,9 +17,9 @@ from shutil import rmtree
 from setuptools import find_packages, setup, Command
 
 # Package meta-data.
-NAME = "fynesse"
-DESCRIPTION = "Template files for performing fynesse pipeline data analysis with python."
-URL = "https://github.com/lawrennd/fynesse_template"
+NAME = "housing_fynesse"
+DESCRIPTION = "Files for performing fynesse pipeline data analysis on a house price prediction task with python."
+URL = "https://github.com/Thomas-Christie/housing_fynesse"
 EMAIL = "emal@domain.here"
 AUTHOR = "Givenname Familyname"
 REQUIRES_PYTHON = ">=3.6.0"
@@ -35,7 +35,7 @@ EXTRAS = {
     "interactive html plots": ["bokeh",],
 }
 
-PACKAGE_DATA = {"fynesse": ["defaults.yml"]}
+PACKAGE_DATA = {"housing_fynesse": ["defaults.yml"]}
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------

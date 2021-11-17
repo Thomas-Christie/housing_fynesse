@@ -4,7 +4,7 @@
 # This setup format based on that by Navdeep Gill <https://www.linkedin.com/in/navdeep-gill-b1729456/>
 # https://github.com/navdeep-G/setup.py
 
-# Changes by Neil D. Lawrence for fynesse template
+# Changes by Neil D. Lawrence for housing_fynesse template
 
 # Note: To use the 'upload' functionality of this file, you must:
 #   $ pipenv install twine --dev
@@ -27,7 +27,7 @@ VERSION = "0.1.0"
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    "pandas", "numpy", "jupyter", "matplotlib", 
+    "pandas", "numpy", "jupyter", "matplotlib"
 ]
 
 # What packages are optional?

@@ -1,6 +1,6 @@
 from .config import *
 import pymysql
-import urllib
+import urllib.request
 
 """These are the types of import we might expect in this file
 import httplib2

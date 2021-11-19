@@ -1,5 +1,6 @@
 from .config import *
 import pymysql
+import mariadb
 import urllib.request
 
 """These are the types of import we might expect in this file
@@ -64,7 +65,10 @@ def upload_price_paid_data(conn, start_year, end_year):
             url = f"http://prod.publicdata.landregistry.gov.uk.s3-website-eu-west-1.amazonaws.com/pp-{year}-{part}.csv"
             csv = f"price-paid-{year}-{part}.csv"
             urllib.request.urlretrieve(url, csv)
-            cur.execute('''LOCAL DATA LOAD INFILE {} INTO TABLE {}
-                           FIELDS TERMINATED BY ',' 
-                           LINES STARTING BY '' TERMINATED BY '\\n';'''.format(csv, "pp_data"))
+            upload_statement = (
+                "LOAD DATA LOCAL INFILE %s INTO TABLE pp_data "
+                "FIELDS TERMINATED BY ',' "
+                "LINES STARTING BY '' TERMINATED BY '\n';"
+            )
+            cur.execute(upload_statement, csv)
             print(f"Uploaded CSV: {csv}")

@@ -1,6 +1,5 @@
 from .config import *
 import pymysql
-import mariadb
 import urllib.request
 
 """These are the types of import we might expect in this file

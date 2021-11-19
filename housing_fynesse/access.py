@@ -67,3 +67,4 @@ def upload_price_paid_data(conn, start_year, end_year):
             cur.execute('''LOCAL DATA LOAD INFILE {} INTO TABLE {}
                            FIELDS TERMINATED BY ',' 
                            LINES STARTING BY '' TERMINATED BY '\\n';'''.format(csv, "pp_data"))
+            print(f"Uploaded CSV: {csv}")

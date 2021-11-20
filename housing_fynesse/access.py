@@ -83,10 +83,9 @@ def upload_postcode_data(conn):
     """
     cur = conn.cursor()
     upload_statement = (
-        "LOAD DATA LOCAL INFILE 'open_postcode_geo.csv' INTO TABLE pp_data "
+        "LOAD DATA LOCAL INFILE 'open_postcode_geo.csv' INTO TABLE postcode_data "
         "FIELDS TERMINATED BY ',' "
         "LINES STARTING BY '' TERMINATED BY '\n';"
     )
     cur.execute(upload_statement)
     print("Uploaded open_postcode_geo.csv")
-    

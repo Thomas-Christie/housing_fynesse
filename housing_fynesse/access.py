@@ -71,3 +71,22 @@ def upload_price_paid_data(conn, start_year, end_year):
             )
             cur.execute(upload_statement, csv)
             print(f"Uploaded CSV: {csv}")
+
+
+def upload_postcode_data(conn):
+    """Upload postcode data to the MariaDB database
+       specified in the connection.
+
+    Args:
+        conn: Connection to MariaDB database
+
+    """
+    cur = conn.cursor()
+    upload_statement = (
+        "LOAD DATA LOCAL INFILE 'open_postcode_geo.csv' INTO TABLE pp_data "
+        "FIELDS TERMINATED BY ',' "
+        "LINES STARTING BY '' TERMINATED BY '\n';"
+    )
+    cur.execute(upload_statement)
+    print("Uploaded open_postcode_geo.csv")
+    

@@ -91,5 +91,6 @@ def upload_postcode_data(conn):
     )
     cur.execute(upload_statement)
     conn.commit()
+    print("Changes commmited")
     conn.close()
     print("Uploaded open_postcode_geo.csv")

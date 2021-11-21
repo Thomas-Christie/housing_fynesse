@@ -71,6 +71,8 @@ def upload_price_paid_data(conn, start_year, end_year):
             )
             cur.execute(upload_statement, csv)
             print(f"Uploaded CSV: {csv}")
+    conn.commit()
+    conn.close()
 
 
 def upload_postcode_data(conn):
@@ -88,4 +90,6 @@ def upload_postcode_data(conn):
         "LINES STARTING BY '' TERMINATED BY '\n';"
     )
     cur.execute(upload_statement)
+    conn.commit()
+    conn.close()
     print("Uploaded open_postcode_geo.csv")

@@ -69,7 +69,7 @@ def upload_price_paid_data(conn, start_year, end_year):
             upload_statement = (
                 "LOAD DATA LOCAL INFILE %s INTO TABLE pp_data "
                 "FIELDS TERMINATED BY ',' "
-                f"OPTIONALLY ENCLOSED BY {quote} "  # One of these two should work!
+                f"OPTIONALLY ENCLOSED BY '{quote}' "  # One of these two should work!
                 "LINES STARTING BY '' TERMINATED BY '\n';"
             )
             cur.execute(upload_statement, csv)

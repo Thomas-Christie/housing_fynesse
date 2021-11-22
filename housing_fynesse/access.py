@@ -67,7 +67,7 @@ def upload_price_paid_data(conn, start_year, end_year):
             processed_csv = f"price-paid-{year}-{part}-processed.csv"
             urllib.request.urlretrieve(url, csv)
             df = pd.read_csv(csv, header=None)  # Removes double quotes from values which was causing issue in DB
-            df.to_csv(processed_csv)
+            df.to_csv(processed_csv, header=False, index=False)
             upload_statement = (
                 "LOAD DATA LOCAL INFILE %s INTO TABLE pp_data "
                 "FIELDS TERMINATED BY ',' "

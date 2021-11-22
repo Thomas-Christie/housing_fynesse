@@ -64,17 +64,16 @@ def upload_price_paid_data(conn, start_year, end_year):
         for part in parts:
             url = f"http://prod.publicdata.landregistry.gov.uk.s3-website-eu-west-1.amazonaws.com/pp-{year}-{part}.csv"
             csv = f"price-paid-{year}-{part}.csv"
-            processed_csv = f"price-paid-{year}-{part}-processed.csv"
             urllib.request.urlretrieve(url, csv)
-            df = pd.read_csv(csv, header=None)  # Removes double quotes from values which was causing issue in DB
-            df.to_csv(processed_csv, header=False, index=False)
+            quote = '"'
             upload_statement = (
                 "LOAD DATA LOCAL INFILE %s INTO TABLE pp_data "
                 "FIELDS TERMINATED BY ',' "
+                f"OPTIONALLY ENCLOSED BY {quote} "  # One of these two should work!
                 "LINES STARTING BY '' TERMINATED BY '\n';"
             )
-            cur.execute(upload_statement, processed_csv)
-            print(f"Uploaded CSV: {processed_csv}")
+            cur.execute(upload_statement, csv)
+            print(f"Uploaded CSV: {csv}")
     conn.commit()
     conn.close()
 

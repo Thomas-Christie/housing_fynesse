@@ -389,21 +389,27 @@ def find_nearest_point(conn, postcode, width, height, year, features_dict):
     return houses
 
 
-# Added conn
-def plot_house_price_vs_number_of_feature(conn, postcode, width, height, distance_from_house, year, feature,
-                                          value=None):
-    if value is None:
-        features_dict = {feature: []}
-        feature_col = f"{feature}_number"
-    else:
-        features_dict = {feature: [value]}
-        feature_col = f"{feature}_{value}_number"
-    a = house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict)
+def plot_house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict):
+    data = house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict)
+    data = data[data['price'] < 1000000]
     plt.rcParams["figure.figsize"] = (10, 5)
-    plt.scatter(a[feature_col], a['price'])
-    plt.plot()
-    plt.xlabel(f'{feature_col} within {distance_from_house}km from house')
-    plt.ylabel('House Price')
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            plt.figure()
+            plt.scatter(data[f'{feature}_number'], data['price'])
+            plt.xlabel(f'{feature}_number within {distance_from_house}km from house')
+            plt.ylabel('House Price')
+            print(f'Correlation of {feature}_number with price: ', data[f'{feature}_number'].corr(data['price']))
+        else:
+            for tag in tags:
+                plt.figure()
+                plt.rcParams["figure.figsize"] = (10, 5)
+                plt.scatter(data[f'{feature}_{tag}_number'], data['price'])
+                plt.xlabel(f'{feature}_{tag}_number within {distance_from_house}km from house')
+                plt.ylabel('House Price')
+                print(f'Correlation of {feature}_{tag}_number with price: ',
+                      data[f'{feature}_{tag}_number'].corr(data['price']))
+    plt.show()
 
 
 def interactive_viewer(conn):

@@ -1,5 +1,5 @@
 # This file contains code for suporting addressing questions in the data
-import assess
+import housing_fynesse.assess as assess
 import matplotlib.pyplot as plt
 import numpy as np
 import statsmodels.api as sm

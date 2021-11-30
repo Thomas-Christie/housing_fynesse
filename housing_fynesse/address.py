@@ -33,14 +33,14 @@ def predict_price_good(latitude, longitude, year, property_type):
     box_width = 4
     box_height = 4
     distance_from_house = 1
-    d = assess.house_price_vs_number_of_features_coordinates(longitude, latitude, property_type, box_width, box_height,
+    d = assess.house_price_vs_number_of_features_coordinates(conn, longitude, latitude, property_type, box_width, box_height,
                                                              distance_from_house, year, features)
     d = d.astype({"longitude": float, "lattitude": float})
     if len(d) == 0:
         box_width = 40
         box_height = 40
         distance_from_house = 3
-        d = assess.house_price_vs_number_of_features_coordinates(longitude, latitude, property_type, box_width,
+        d = assess.house_price_vs_number_of_features_coordinates(conn, longitude, latitude, property_type, box_width,
                                                                  box_height, distance_from_house, year, features)
         d = d.astype({"longitude": float, "lattitude": float})
     d['constant'] = 1

@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import osmnx as ox
 import mlai
 import mlai.plot as plot
+import ipywidgets as widgets
+from ipywidgets import interact, fixed
 from . import access
 from sklearn.neighbors import BallTree, KDTree
 import numpy as np
@@ -402,6 +404,26 @@ def plot_house_price_vs_number_of_feature(conn, postcode, width, height, distanc
     plt.plot()
     plt.xlabel(f'{feature_col} within {distance_from_house}km from house')
     plt.ylabel('House Price')
+
+
+def interactive_viewer(conn):
+    postcode_select = widgets.Text(value='CB2 1RF', placeholder='CB2 1RF', description='Postcode:', disabled=False)
+    # Select multiple by holding down shift
+    tags_select = widgets.SelectMultiple(
+        options=['amenity', 'buildings', 'historic', 'leisure', 'shop', 'tourism', 'public_transport'],
+        value=['amenity'], description='Tags')
+    value_select = widgets.Text(value='None', placeholder='None', description='Tag Value:')
+    width_value = widgets.BoundedFloatText(value=1, min=0, max=20, step=0.1, description='Width:')
+    height_value = widgets.BoundedFloatText(value=1, min=0, max=20, step=0.1, description='Height:')
+    year_value = widgets.IntSlider(value=2010, min=1995, max=2021, step=1, description='Year:')
+    return interact(view_pois_interactive,
+                    conn=fixed(conn),
+                    postcode=postcode_select,
+                    width=width_value,
+                    height=height_value,
+                    tags=tags_select,
+                    year=year_value,
+                    value=value_select)
 
 
 def data():

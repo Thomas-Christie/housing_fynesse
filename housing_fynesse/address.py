@@ -53,8 +53,8 @@ def predict_price_good(latitude, longitude, year, property_type):
             for tag in tags:
                 column_names.append(f"{feature}_{tag}_number")
     column_names.append("constant")
-    column_names.append("longitude")
-    column_names.append("lattitude")
+    # column_names.append("longitude")
+    # column_names.append("lattitude")
     design = train[column_names]
     y = train['price']
     # m_linear_basis = sm.OLS(y, design)

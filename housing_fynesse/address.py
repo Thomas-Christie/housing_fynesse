@@ -24,7 +24,7 @@ import scipy.stats"""
 """Address a particular question that arises from the data"""
 
 
-def predict_price_good(latitude, longitude, year, property_type):
+def predict_price_good(conn, latitude, longitude, year, property_type):
     features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
                 "public_transport": [],
                 "shop": [],

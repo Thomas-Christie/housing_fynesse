@@ -300,7 +300,8 @@ def number_of_features_surrounding_test(longitude, latitude, width, height, dist
 
 
 # Added conn
-def house_price_vs_distance_from_feature_coordinates(conn, longitude, latitude, property_type, width, height, year, features_dict):
+def house_price_vs_distance_from_feature_coordinates(conn, longitude, latitude, property_type, width, height, year,
+                                                     features_dict):
     box_width = (width / 40075) * 360
     box_height = (height / 40075) * 360
     north = latitude + box_height / 2
@@ -387,7 +388,8 @@ def house_price_vs_distance_from_feature(conn, postcode, width, height, year, fe
     return houses
 
 
-def plot_house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict, max_price):
+def plot_house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict,
+                                           max_price):
     data = house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict)
     data = data[data['price'] < max_price]
     plt.rcParams["figure.figsize"] = (10, 5)
@@ -407,6 +409,30 @@ def plot_house_price_vs_number_of_features(conn, postcode, width, height, distan
                 plt.ylabel('House Price')
                 print(f'Correlation of {feature}_{tag}_number with price: ',
                       data[f'{feature}_{tag}_number'].corr(data['price']))
+    plt.show()
+
+
+def plot_house_price_vs_distance_from_feature(conn, postcode, width, height, year, features_dict, max_price):
+    data = house_price_vs_distance_from_feature(conn, postcode, width, height, year, features_dict)
+    data = data[data['price'] < max_price]
+    plt.rcParams["figure.figsize"] = (10, 5)
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            plt.figure()
+            plt.scatter(data[f'distance_from_{feature}'], data['price'])
+            plt.xlabel(f'Distance from closest {feature}')
+            plt.ylabel('House Price')
+            print(f'Correlation of distance from closest {feature} with price: ',
+                  data[f'distance_from_{feature}'].corr(data['price']))
+        else:
+            for tag in tags:
+                plt.figure()
+                plt.rcParams["figure.figsize"] = (10, 5)
+                plt.scatter(data[f'distance_from_{feature}_{tag}'], data['price'])
+                plt.xlabel(f'Distance from closest {feature}_{tag}')
+                plt.ylabel('House Price')
+                print(f'Correlation of distance from closest {feature}_{tag} with price: ',
+                      data[f'distance_from_{feature}_{tag}'].corr(data['price']))
     plt.show()
 
 

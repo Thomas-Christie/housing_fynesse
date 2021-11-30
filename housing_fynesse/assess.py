@@ -232,7 +232,7 @@ def house_price_vs_number_of_features_coordinates(conn, longitude, latitude, pro
                                f'pp.postcode = post.postcode')
     for feature, tags in features_dict.items():
         if len(tags) == 0:
-            features = pois_in_area_coordinates(conn, longitude, latitude, width + 2 * distance_from_house,
+            features = pois_in_area_coordinates(longitude, latitude, width + 2 * distance_from_house,
                                                 height + 2 * distance_from_house, {feature: True})
             features["latitude"] = features["geometry"].centroid.y
             features["longitude"] = features["geometry"].centroid.x

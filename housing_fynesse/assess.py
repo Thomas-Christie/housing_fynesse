@@ -5,6 +5,8 @@ import osmnx as ox
 import mlai
 import mlai.plot as plot
 from . import access
+from sklearn.neighbors import BallTree, KDTree
+import numpy as np
 
 """These are the types of import we might expect in this file
 import pandas
@@ -146,6 +148,260 @@ def year_avg_house_price(conn, start_year, end_year):
     plt.plot()
     plt.xlabel('year')
     plt.ylabel('average house price')
+
+
+# Added conn
+def house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict):
+    longitude = float(
+        execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
+    latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    d = ((distance_from_house / 2) / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    houses = execute_sql(conn, f'SELECT * FROM '
+                               f'(SELECT * FROM postcode_data WHERE lattitude <= {north} AND lattitude >= {south} AND longitude <= {east} AND longitude >= {west}) AS post '
+                               f'INNER JOIN '
+                               f'(SELECT * FROM pp_data WHERE year(date_of_transfer) = {year}) as pp '
+                               f'ON '
+                               f'pp.postcode = post.postcode')
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            features = pois_in_area(conn, postcode, width + 2 * distance_from_house, height + 2 * distance_from_house,
+                                    {feature: True})
+            features["latitude"] = features["geometry"].centroid.y
+            features["longitude"] = features["geometry"].centroid.x
+            a = []
+            postcode_features = {}
+            for _, row in houses.iterrows():
+                longitude = float(row['longitude'])
+                latitude = float(row['lattitude'])
+                if row['postcode'][0] in postcode_features:
+                    a.append(postcode_features[row['postcode'][0]])
+                else:
+                    num_features = len(
+                        features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                                 & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+                    postcode_features[row['postcode'][0]] = num_features
+                    a.append(num_features)
+            houses[f'{feature}_number'] = a
+        else:
+            for tag in tags:
+                features = pois_in_area(conn, postcode, width + 2 * distance_from_house,
+                                        height + 2 * distance_from_house,
+                                        {feature: True}, tag)
+                features["latitude"] = features["geometry"].centroid.y
+                features["longitude"] = features["geometry"].centroid.x
+                a = []
+                postcode_features = {}
+                for _, row in houses.iterrows():
+                    longitude = float(row['longitude'])
+                    latitude = float(row['lattitude'])
+                    if row['postcode'][0] in postcode_features:
+                        a.append(postcode_features[row['postcode'][0]])
+                    else:
+                        num_features = len(
+                            features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                                     & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+                        postcode_features[row['postcode'][0]] = num_features
+                        a.append(num_features)
+                houses[f'{feature}_{tag}_number'] = a
+    return houses
+
+
+# Added conn
+def house_price_vs_number_of_features_coordinates(conn, longitude, latitude, property_type, width, height,
+                                                  distance_from_house, year, features_dict):
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    d = ((distance_from_house / 2) / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    houses = execute_sql(conn, f'SELECT * FROM '
+                               f'(SELECT * FROM postcode_data WHERE lattitude <= {north} AND lattitude >= {south} AND longitude <= {east} AND longitude >= {west}) AS post '
+                               f'INNER JOIN '
+                               f'(SELECT * FROM pp_data WHERE year(date_of_transfer) BETWEEN {year - 1} AND {year + 1} AND property_type = "{property_type}") as pp '
+                               f'ON '
+                               f'pp.postcode = post.postcode')
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            features = pois_in_area_coordinates(conn, longitude, latitude, width + 2 * distance_from_house,
+                                                height + 2 * distance_from_house, {feature: True})
+            features["latitude"] = features["geometry"].centroid.y
+            features["longitude"] = features["geometry"].centroid.x
+            a = []
+            postcode_features = {}
+            for _, row in houses.iterrows():
+                longitude = float(row['longitude'])
+                latitude = float(row['lattitude'])
+                if row['postcode'][0] in postcode_features:
+                    a.append(postcode_features[row['postcode'][0]])
+                else:
+                    num_features = len(
+                        features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                                 & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+                    postcode_features[row['postcode'][0]] = num_features
+                    a.append(num_features)
+            houses[f'{feature}_number'] = a
+        else:
+            for tag in tags:
+                features = pois_in_area_coordinates(longitude, latitude, width + 2 * distance_from_house,
+                                                    height + 2 * distance_from_house, {feature: True}, tag)
+                features["latitude"] = features["geometry"].centroid.y
+                features["longitude"] = features["geometry"].centroid.x
+                a = []
+                postcode_features = {}
+                for _, row in houses.iterrows():
+                    longitude = float(row['longitude'])
+                    latitude = float(row['lattitude'])
+                    if row['postcode'][0] in postcode_features:
+                        a.append(postcode_features[row['postcode'][0]])
+                    else:
+                        num_features = len(
+                            features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                                     & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+                        postcode_features[row['postcode'][0]] = num_features
+                        a.append(num_features)
+                houses[f'{feature}_{tag}_number'] = a
+    return houses
+
+
+def number_of_features_surrounding_test(longitude, latitude, width, height, distance_from_house, year, features_dict):
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    d = ((distance_from_house / 2) / 40075) * 360
+    df = pd.DataFrame([[longitude, latitude]], columns=["longitude", "lattitude"])
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            features = pois_in_area_coordinates(longitude, latitude, width + 2 * distance_from_house,
+                                                height + 2 * distance_from_house, {feature: True})
+            features["latitude"] = features["geometry"].centroid.y
+            features["longitude"] = features["geometry"].centroid.x
+            num_features = len(
+                features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                         & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+            df[f'{feature}_number'] = num_features
+        else:
+            for tag in tags:
+                features = pois_in_area_coordinates(longitude, latitude, width + 2 * distance_from_house,
+                                                    height + 2 * distance_from_house, {feature: True}, tag)
+                features["latitude"] = features["geometry"].centroid.y
+                features["longitude"] = features["geometry"].centroid.x
+                num_features = len(
+                    features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                             & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+                df[f'{feature}_{tag}_number'] = num_features
+    return df
+
+
+# Added conn
+def find_nearest_point_coordinates(conn, longitude, latitude, property_type, width, height, year, features_dict):
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    houses = execute_sql(conn, f'SELECT * FROM '
+                               f'(SELECT * FROM postcode_data WHERE lattitude <= {north} AND lattitude >= {south} AND longitude <= {east} AND longitude >= {west}) AS post '
+                               f'INNER JOIN '
+                               f'(SELECT * FROM pp_data WHERE year(date_of_transfer) BETWEEN {year - 1} AND {year + 1}) as pp '
+                               f'ON '
+                               f'pp.postcode = post.postcode')
+    print("Number of houses: ", len(houses))
+    houses["latitude_rad"] = np.deg2rad(houses["lattitude"].values.astype(float))
+    houses["longitude_rad"] = np.deg2rad(houses["longitude"].values.astype(float))
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            pois = pois_in_area_coordinates(longitude, latitude, 2 * width, 2 * height, {
+                feature: True})  # So houses in "corners" of houses box can find points outside box
+            if len(pois) > 0:
+                pois["latitude"] = pois["geometry"].centroid.y
+                pois["longitude"] = pois["geometry"].centroid.x
+                pois["latitude_rad"] = np.deg2rad(pois["latitude"].values)
+                pois["longitude_rad"] = np.deg2rad(pois["longitude"].values)
+                ball = BallTree(pois[["latitude_rad", "longitude_rad"]].values, metric='haversine')
+                distances, indices = ball.query(houses[["latitude_rad", "longitude_rad"]].values, k=1)
+                houses[f'distance_from_{feature}'] = distances * 6371
+        else:
+            for tag in tags:
+                pois = pois_in_area_coordinates(longitude, latitude, 2 * width, 2 * height, {feature: True},
+                                                tag)  # So houses in "corners" of houses box can find points outside box
+                if len(pois) > 0:
+                    pois["latitude"] = pois["geometry"].centroid.y
+                    pois["longitude"] = pois["geometry"].centroid.x
+                    pois["latitude_rad"] = np.deg2rad(pois["latitude"].values)
+                    pois["longitude_rad"] = np.deg2rad(pois["longitude"].values)
+                    ball = BallTree(pois[["latitude_rad", "longitude_rad"]].values, metric='haversine')
+                    distances, indices = ball.query(houses[["latitude_rad", "longitude_rad"]].values, k=1)
+                    houses[f'distance_from_{feature}_{tag}'] = distances * 6371
+    return houses
+
+
+# Added conn
+def find_nearest_point(conn, postcode, width, height, year, features_dict):
+    longitude = float(
+        execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
+    latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    houses = execute_sql(conn, f'SELECT * FROM '
+                               f'(SELECT * FROM postcode_data WHERE lattitude <= {north} AND lattitude >= {south} AND longitude <= {east} AND longitude >= {west}) AS post '
+                               f'INNER JOIN '
+                               f'(SELECT * FROM pp_data WHERE year(date_of_transfer) = {year}) as pp '
+                               f'ON '
+                               f'pp.postcode = post.postcode')
+    houses["latitude_rad"] = np.deg2rad(houses["lattitude"].values.astype(float))
+    houses["longitude_rad"] = np.deg2rad(houses["longitude"].values.astype(float))
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            pois = pois_in_area(conn, postcode, 2 * width, 2 * height,
+                                {feature: True})  # So houses in "corners" of houses box can find points outside box
+            pois["latitude"] = pois["geometry"].centroid.y
+            pois["longitude"] = pois["geometry"].centroid.x
+            pois["latitude_rad"] = np.deg2rad(pois["latitude"].values)
+            pois["longitude_rad"] = np.deg2rad(pois["longitude"].values)
+            ball = BallTree(pois[["latitude_rad", "longitude_rad"]].values, metric='haversine')
+            distances, indices = ball.query(houses[["latitude_rad", "longitude_rad"]].values, k=1)
+            houses[f'distance_from_{feature}'] = distances * 6371
+        else:
+            for tag in tags:
+                pois = pois_in_area(conn, postcode, 2 * width, 2 * height, {feature: True},
+                                    tag)  # So houses in "corners" of houses box can find points outside box
+                pois["latitude"] = pois["geometry"].centroid.y
+                pois["longitude"] = pois["geometry"].centroid.x
+                pois["latitude_rad"] = np.deg2rad(pois["latitude"].values)
+                pois["longitude_rad"] = np.deg2rad(pois["longitude"].values)
+                ball = BallTree(pois[["latitude_rad", "longitude_rad"]].values, metric='haversine')
+                distances, indices = ball.query(houses[["latitude_rad", "longitude_rad"]].values, k=1)
+                houses[f'distance_from_{feature}_{tag}'] = distances * 6371
+    return houses
+
+
+# Added conn
+def plot_house_price_vs_number_of_feature(conn, postcode, width, height, distance_from_house, year, feature,
+                                          value=None):
+    if value is None:
+        features_dict = {feature: []}
+        feature_col = f"{feature}_number"
+    else:
+        features_dict = {feature: [value]}
+        feature_col = f"{feature}_{value}_number"
+    a = house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict)
+    plt.rcParams["figure.figsize"] = (10, 5)
+    plt.scatter(a[feature_col], a['price'])
+    plt.plot()
+    plt.xlabel(f'{feature_col} within {distance_from_house}km from house')
+    plt.ylabel('House Price')
 
 
 def data():

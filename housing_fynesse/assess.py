@@ -274,8 +274,6 @@ def house_price_vs_number_of_features_coordinates(conn, longitude, latitude, pro
 
 
 def number_of_features_surrounding_test(longitude, latitude, width, height, distance_from_house, year, features_dict):
-    box_width = (width / 40075) * 360
-    box_height = (height / 40075) * 360
     d = ((distance_from_house / 2) / 40075) * 360
     df = pd.DataFrame([[longitude, latitude]], columns=["longitude", "lattitude"])
     for feature, tags in features_dict.items():
@@ -302,7 +300,7 @@ def number_of_features_surrounding_test(longitude, latitude, width, height, dist
 
 
 # Added conn
-def find_nearest_point_coordinates(conn, longitude, latitude, property_type, width, height, year, features_dict):
+def house_price_vs_distance_from_feature_coordinates(conn, longitude, latitude, property_type, width, height, year, features_dict):
     box_width = (width / 40075) * 360
     box_height = (height / 40075) * 360
     north = latitude + box_height / 2
@@ -346,7 +344,7 @@ def find_nearest_point_coordinates(conn, longitude, latitude, property_type, wid
 
 
 # Added conn
-def find_nearest_point(conn, postcode, width, height, year, features_dict):
+def house_price_vs_distance_from_feature(conn, postcode, width, height, year, features_dict):
     longitude = float(
         execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
     latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
@@ -389,9 +387,9 @@ def find_nearest_point(conn, postcode, width, height, year, features_dict):
     return houses
 
 
-def plot_house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict):
+def plot_house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict, max_price):
     data = house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict)
-    data = data[data['price'] < 1000000]
+    data = data[data['price'] < max_price]
     plt.rcParams["figure.figsize"] = (10, 5)
     for feature, tags in features_dict.items():
         if len(tags) == 0:

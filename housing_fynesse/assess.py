@@ -42,6 +42,102 @@ def pois_in_area_coordinates(longitude, latitude, width, height, tags, value=Non
     return pois
 
 
+def price_in_box_in_year_coordinates(conn, latitude, longitude, width, height, year):
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    price = execute_sql(conn, f'SELECT year(pp.date_of_transfer) AS year, AVG(pp.price) as average_price FROM '
+                              f'(SELECT * FROM postcode_data WHERE lattitude <= {north} AND lattitude >= {south} AND longitude <= {east} AND longitude >= {west}) AS post '
+                              f'INNER JOIN '
+                              f'(SELECT * FROM pp_data WHERE year(date_of_transfer) = {year}) as pp '
+                              f'ON '
+                              f'pp.postcode = post.postcode')
+    return price
+
+
+def price_in_box_in_year_postcode(conn, postcode, width, height, year):
+    longitude = float(
+        execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
+    latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    price = execute_sql(conn, f'SELECT year(pp.date_of_transfer) AS year, AVG(pp.price) as average_price FROM '
+                              f'(SELECT * FROM postcode_data WHERE lattitude <= {north} AND lattitude >= {south} AND longitude <= {east} AND longitude >= {west}) AS post '
+                              f'INNER JOIN '
+                              f'(SELECT * FROM pp_data WHERE year(date_of_transfer) = {year}) as pp '
+                              f'ON '
+                              f'pp.postcode = post.postcode')
+    return price
+
+
+# Added conn
+def pois_in_area(conn, postcode, width, height, tags, value=None):
+    longitude = float(
+        execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
+    latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    pois = ox.geometries_from_bbox(north, south, east, west, tags)
+    if value is not None:
+        pois = pois[pois[list(tags.keys())[0]] == value]
+    print(
+        f"There are {len(pois)} points of interest with tag={tags} taking value={value} surrounding {postcode} latitude: {latitude}, longitude: {longitude}")
+    return pois
+
+
+# Added conn
+def plot_pois(conn, pois, postcode, width, height):
+    longitude = float(
+        execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
+    latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
+    box_width = (width / 40075) * 360
+    box_height = (height / 40075) * 360
+    north = latitude + box_height / 2
+    south = latitude - box_height / 2
+    west = longitude - box_width / 2
+    east = longitude + box_width / 2
+    fig, ax = plt.subplots(figsize=[10, 10])
+    graph = ox.graph_from_bbox(north, south, east, west)
+    # Retrieve nodes and edges
+    nodes, edges = ox.graph_to_gdfs(graph)
+    # Plot street edges
+    edges.plot(ax=ax, linewidth=1, edgecolor="dimgray")
+    ax.set_xlabel("longitude")
+    ax.set_ylabel("latitude")
+    # Plot all POIs
+    if pois.empty:
+        print("No pois to show")
+    else:
+        pois.plot(ax=ax, color="blue", alpha=0.7, markersize=10)
+    plt.show()
+
+
+# Added conn
+def view_pois_interactive(conn, postcode, width, height, tags, year, value="None"):
+    tags_dict = {}
+    for tag in tags:
+        tags_dict[tag] = True
+    if value.lower() == 'none':
+        p = pois_in_area(conn, postcode, width, height, tags_dict)
+    else:
+        p = pois_in_area(conn, postcode, width, height, tags_dict, value)
+    avg_house_price = price_in_box_in_year_postcode(conn, postcode, width, height, year)
+    print(
+        f"Average house price in box of width = {width}km, height = {height}km, center = {postcode} in year {year} is: £{avg_house_price['average_price'][0]}")
+    plot_pois(conn, p, postcode, width, height)
+
+
 def year_avg_house_price(conn, start_year, end_year):
     year_prices = execute_sql(conn, f'SELECT year(date_of_transfer) AS year, AVG(price) FROM pp_data '
                                     f'WHERE year(date_of_transfer) BETWEEN {start_year} AND {end_year} GROUP BY year(date_of_transfer)')

@@ -42,7 +42,7 @@ def pois_in_area_coordinates(longitude, latitude, width, height, tags, value=Non
     return pois
 
 
-def year_avg_house_price(start_year, end_year):
+def year_avg_house_price(conn, start_year, end_year):
     year_prices = execute_sql(conn, f'SELECT year(date_of_transfer) AS year, AVG(price) FROM pp_data '
                                     f'WHERE year(date_of_transfer) BETWEEN {start_year} AND {end_year} GROUP BY year(date_of_transfer)')
     plt.rcParams["figure.figsize"] = (20, 10)

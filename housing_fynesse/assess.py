@@ -299,6 +299,66 @@ def number_of_features_surrounding_test(longitude, latitude, width, height, dist
     return df
 
 
+def get_test_features(longitude, latitude, width, height, distance_from_house, year, features_dict,
+                      distance_features_dict):
+    d = ((distance_from_house / 2) / 40075) * 360
+    df = pd.DataFrame([[longitude, latitude]], columns=["longitude", "lattitude"])
+    df["latitude_rad"] = np.deg2rad(df["lattitude"].values.astype(float))
+    df["longitude_rad"] = np.deg2rad(df["longitude"].values.astype(float))
+
+    for feature, tags in features_dict.items():
+        if len(tags) == 0:
+            features = pois_in_area_coordinates(longitude, latitude,
+                                                width + 2 * distance_from_house,
+                                                height + 2 * distance_from_house,
+                                                {feature: True})
+            features["latitude"] = features["geometry"].centroid.y
+            features["longitude"] = features["geometry"].centroid.x
+            num_features = len(
+                features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                         & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+            df[f'{feature}_number'] = num_features
+        else:
+            for tag in tags:
+                features = pois_in_area_coordinates(longitude, latitude,
+                                                    width + 2 * distance_from_house,
+                                                    height + 2 * distance_from_house,
+                                                    {feature: True}, tag)
+                features["latitude"] = features["geometry"].centroid.y
+                features["longitude"] = features["geometry"].centroid.x
+                num_features = len(
+                    features[(features['longitude'] <= longitude + d) & (features['longitude'] >= longitude - d)
+                             & (features['latitude'] <= latitude + d) & (features['latitude'] >= latitude - d)])
+                df[f'{feature}_{tag}_number'] = num_features
+
+    for feature, tags in distance_features_dict.items():
+        if len(tags) == 0:
+            pois = pois_in_area_coordinates(longitude, latitude, 2 * width, 2 * height, {
+                feature: True})  # So houses in "corners" of houses box can find points outside box
+            if len(pois) > 0:
+                pois["latitude"] = pois["geometry"].centroid.y
+                pois["longitude"] = pois["geometry"].centroid.x
+                pois["latitude_rad"] = np.deg2rad(pois["latitude"].values)
+                pois["longitude_rad"] = np.deg2rad(pois["longitude"].values)
+                ball = BallTree(pois[["latitude_rad", "longitude_rad"]].values, metric='haversine')
+                distances, indices = ball.query(df[["latitude_rad", "longitude_rad"]].values, k=1)
+                df[f'distance_from_{feature}'] = distances * 6371
+        else:
+            for tag in tags:
+                pois = pois_in_area_coordinates(longitude, latitude, 2 * width, 2 * height,
+                                                {feature: True},
+                                                tag)  # So houses in "corners" of houses box can find points outside box
+                if len(pois) > 0:
+                    pois["latitude"] = pois["geometry"].centroid.y
+                    pois["longitude"] = pois["geometry"].centroid.x
+                    pois["latitude_rad"] = np.deg2rad(pois["latitude"].values)
+                    pois["longitude_rad"] = np.deg2rad(pois["longitude"].values)
+                    ball = BallTree(pois[["latitude_rad", "longitude_rad"]].values, metric='haversine')
+                    distances, indices = ball.query(df[["latitude_rad", "longitude_rad"]].values, k=1)
+                    df[f'distance_from_{feature}_{tag}'] = distances * 6371
+    return df
+
+
 # Added conn
 def house_price_vs_distance_from_feature_coordinates(conn, longitude, latitude, property_type, width, height, year,
                                                      features_dict):

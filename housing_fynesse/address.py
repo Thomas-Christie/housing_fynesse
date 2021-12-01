@@ -40,7 +40,7 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
                                                                  box_height, distance_from_house, year, features)
         d = d.astype({"longitude": float, "lattitude": float})
     d['constant'] = 1
-    train, test = train_test_split(d, test_size=0.2)
+    train, test = train_test_split(d, test_size=0.1)
     column_names = []
     for feature, tags in features.items():
         if len(tags) == 0:
@@ -76,7 +76,7 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
     ax.set_aspect('equal')
     ax.set_xlim(lims)
     ax.set_ylim(lims)
-    print(test.to_string())
+    print(test[['price', 'prediction']].head().to_string())
     rmse = mean_squared_error(test['price'], test['prediction'], squared=False)
     mape = mean_absolute_percentage_error(test['price'], test['prediction'])
     print("Root Mean Squared Error: ", rmse)
@@ -115,7 +115,7 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type, 
                                                                 year, distance_features)
     a = d.join(s[set(distance_column_names).intersection(set(s.columns))])
     a['constant'] = 1
-    train, test = train_test_split(a, test_size=0.2)
+    train, test = train_test_split(a, test_size=0.1)
     feature_cols = set(column_names).intersection(set(train.columns))
     design = train[feature_cols]
     y = train['price']
@@ -146,7 +146,7 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type, 
     ax.set_aspect('equal')
     ax.set_xlim(lims)
     ax.set_ylim(lims)
-    print(test.to_string())
+    print(test[['price', 'prediction']].head().to_string())
     rmse = mean_squared_error(test['price'], test['prediction'], squared=False)
     mape = mean_absolute_percentage_error(test['price'], test['prediction'])
     print("Root Mean Squared Error: ", rmse)

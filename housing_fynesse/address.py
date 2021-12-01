@@ -24,7 +24,7 @@ import scipy.stats"""
 """Address a particular question that arises from the data"""
 
 
-def predict_price_good(conn, latitude, longitude, year, property_type):
+def predict_price_without_distance(conn, latitude, longitude, year, property_type):
     features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
                 "public_transport": [],
                 "shop": [],
@@ -54,12 +54,9 @@ def predict_price_good(conn, latitude, longitude, year, property_type):
             for tag in tags:
                 column_names.append(f"{feature}_{tag}_number")
     column_names.append("constant")
-    # column_names.append("longitude")
-    # column_names.append("lattitude")
     design = train[column_names]
     y = train['price']
-    # m_linear_basis = sm.OLS(y, design)
-    m_linear_basis = sm.GLM(y, design, family=sm.families.Normal(link=sm.families.links.identity))
+    m_linear_basis = sm.GLM(y, design, family=sm.families.Normal(link=sm.families.links.log))
     results_basis = m_linear_basis.fit()
     test_features = test[column_names]
     results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']
@@ -130,8 +127,7 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     feature_cols = set(column_names).intersection(set(train.columns))
     design = train[feature_cols]
     y = train['price']
-    # m_linear_basis = sm.OLS(y, design)
-    m_linear_basis = sm.GLM(y, design, family=sm.families.Normal(link=sm.families.links.identity))
+    m_linear_basis = sm.GLM(y, design, family=sm.families.Normal(link=sm.families.links.log))
     results_basis = m_linear_basis.fit()
     test_features = test[feature_cols]
     results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']

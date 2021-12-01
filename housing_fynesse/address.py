@@ -148,7 +148,6 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     prediction_features['pred'] = predicted_price
     print(results_basis.summary())
     plt.rcParams["figure.figsize"] = (20, 10)
-    plt.xlim([0, 1000000])
     plt.scatter(test['price'], test['prediction'])
     plt.plot()
     plt.xlabel('Actual Price')

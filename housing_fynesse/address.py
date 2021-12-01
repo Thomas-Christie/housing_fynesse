@@ -127,7 +127,8 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     feature_cols = set(column_names).intersection(set(train.columns))
     design = train[feature_cols]
     y = train['price']
-    m_linear_basis = sm.GLM(y, design, family=sm.families.Gaussian(link=sm.families.links.log))
+    m_linear_basis = sm.OLS(y, design)
+    # m_linear_basis = sm.GLM(y, design, family=sm.families.Gaussian(link=sm.families.links.log))
     results_basis = m_linear_basis.fit()
     test_features = test[feature_cols]
     results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']

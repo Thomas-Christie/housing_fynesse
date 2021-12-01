@@ -91,9 +91,13 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
 
 def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
-                "public_transport": []}
-    distance_features = {"amenity": ["cafe", "restaurant"],
-                         "public_transport": []}
+                "public_transport": [],
+                "shop": [],
+                "leisure": ["park"]}
+    distance_features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
+                         "public_transport": [],
+                         "shop": [],
+                         "leisure": ["park"]}
     column_names = []
     distance_column_names = []
     box_width = 4

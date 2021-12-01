@@ -152,6 +152,15 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     plt.plot()
     plt.xlabel('Actual Price')
     plt.ylabel('Predicted Price')
+    ax = plt.gca()
+    lims = [
+        np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+        np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
+    ]
+    ax.plot(lims, lims, 'k-', alpha=0.75, zorder=0)
+    ax.set_aspect('equal')
+    ax.set_xlim(lims)
+    ax.set_ylim(lims)
     rmse = mean_squared_error(test['price'], test['prediction'], squared=False)
     mape = mean_absolute_percentage_error(test['price'], test['prediction'])
     print("Root Mean Squared Error: ", rmse)

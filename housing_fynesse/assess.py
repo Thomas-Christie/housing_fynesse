@@ -89,7 +89,7 @@ def price_in_box_in_year_coordinates(conn, latitude, longitude, width, height, y
     return price
 
 
-def price_in_box_in_year_postcode(conn, postcode, width, height, year):
+def price_in_box_in_year(conn, postcode, width, height, year):
     """ Returns the average house price in the bounding box specified for the given year
 
     Args:
@@ -211,7 +211,7 @@ def view_pois_interactive(conn, postcode, width, height, tags, year, value="None
         p = pois_in_area(conn, postcode, width, height, tags_dict)
     else:
         p = pois_in_area(conn, postcode, width, height, tags_dict, value)
-    avg_house_price = price_in_box_in_year_postcode(conn, postcode, width, height, year)
+    avg_house_price = price_in_box_in_year(conn, postcode, width, height, year)
     print(
         f"Average house price in box of width = {width}km, height = {height}km, center = {postcode} in year {year} is: £{avg_house_price['average_price'][0]}")
     plot_pois(conn, p, postcode, width, height)
@@ -392,7 +392,7 @@ def house_price_vs_number_of_features_coordinates(conn, longitude, latitude, pro
     return houses
 
 
-def get_test_features_without_distance(longitude, latitude, width, height, distance_from_house, year, features_dict):
+def get_test_feature_numbers(longitude, latitude, width, height, distance_from_house, year, features_dict):
     """ Given the longitude and latitude of a house from the model, this function will calculate the feature
     values required by the model (e.g. number of schools within a certain distance of the longitude/latitude
     specified). It will only calculate the number of the given features surrounding the house, and not the distances
@@ -437,12 +437,10 @@ def get_test_features_without_distance(longitude, latitude, width, height, dista
     return df
 
 
-def get_test_features_with_distance(longitude, latitude, width, height, distance_from_house, year, features_dict,
-                                    distance_features_dict):
-    """ Given the longitude and latitude of a house from the model, this function will calculate the feature
-    values required by the model (e.g. number of schools within a certain distance of the longitude/latitude
-    specified). It will calculate the number of the given features surrounding the house, and also the distances
-    to the given features (e.g. distance to closest school)
+def get_test_feature_distances(longitude, latitude, width, height, distance_from_house, year, features_dict,
+                               distance_features_dict):
+    """ Given the longitude and latitude of a house from the model, this function will calculate the distances
+     to the given features for each house (e.g. distance to closest school).
 
     Args:
        longitude: longitude at center of bounding box

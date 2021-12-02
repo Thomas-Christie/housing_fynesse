@@ -1,4 +1,3 @@
-# This file contains code for supporting addressing questions in the data
 import housing_fynesse.assess as assess
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,8 +47,8 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
     test_features = test[column_names]
     results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']
     test['prediction'] = results
-    prediction_features = assess.get_test_features_without_distance(longitude, latitude, box_width, box_height,
-                                                                    distance_from_house, year, features)
+    prediction_features = assess.get_test_feature_numbers(longitude, latitude, box_width, box_height,
+                                                          distance_from_house, year, features)
     prediction_features['constant'] = 1
     prediction_features = prediction_features[column_names]
     predicted_price = results_basis.get_prediction(prediction_features).summary_frame(alpha=0.05)['mean']
@@ -134,9 +133,9 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     test_features = test[feature_cols]
     results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']
     test['prediction'] = results
-    prediction_features = assess.get_test_features_with_distance(longitude, latitude, box_width, box_height, distance_from_house,
-                                                                 year,
-                                                                 features, distance_features)
+    prediction_features = assess.get_test_feature_distances(longitude, latitude, box_width, box_height, distance_from_house,
+                                                            year,
+                                                            features, distance_features)
     prediction_features['constant'] = 1
     prediction_features = prediction_features[feature_cols]
     predicted_price = results_basis.get_prediction(prediction_features).summary_frame(alpha=0.05)['mean']

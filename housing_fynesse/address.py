@@ -24,8 +24,13 @@ import scipy.stats"""
 """Address a particular question that arises from the data"""
 
 
-def predict_price_without_distance(conn, latitude, longitude, box_width, box_height, distance_from_house, year,
-                                   property_type, features):
+def predict_price_without_distance(conn, latitude, longitude, year, property_type):
+    features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
+                "public_transport": [],
+                "leisure": ["park"]}
+    box_width = 4
+    box_height = 4
+    distance_from_house = 2
     d = assess.house_price_vs_number_of_features_coordinates(conn, longitude, latitude, property_type, box_width,
                                                              box_height,
                                                              distance_from_house, year, features)
@@ -83,8 +88,16 @@ def predict_price_without_distance(conn, latitude, longitude, box_width, box_hei
     return predicted_price
 
 
-def predict_price_with_distance(conn, latitude, longitude, box_width, box_height, distance_from_house, year,
-                                property_type, features, distance_features):
+def predict_price_with_distance(conn, latitude, longitude, year, property_type):
+    features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
+                "public_transport": [],
+                "leisure": ["park"]}
+    distance_features = {"amenity": ["cafe", "restaurant"],
+                         "public_transport": [],
+                         "leisure": ["park"]}
+    box_width = 4
+    box_height = 4
+    distance_from_house = 2
     column_names = []
     distance_column_names = []
     for feature, tags in features.items():

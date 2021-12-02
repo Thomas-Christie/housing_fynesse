@@ -130,7 +130,7 @@ def predict_price_with_distance(conn, latitude, longitude, box_width, box_height
     # predicted_price = results_basis.get_prediction(prediction_features).summary_frame(alpha=0.05)['mean']
     predicted_price = results_basis.predict(test_features)
     prediction_features['pred'] = predicted_price
-    print(results_basis.summary())
+    # print(results_basis.summary())
     plt.rcParams["figure.figsize"] = (20, 10)
     plt.scatter(test['price'], test['prediction'])
     plt.plot()

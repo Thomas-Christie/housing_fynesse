@@ -1,4 +1,4 @@
-# This file contains code for suporting addressing questions in the data
+# This file contains code for supporting addressing questions in the data
 import housing_fynesse.assess as assess
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,24 +7,20 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_percentage_error
 
-"""# Here are some of the imports we might expect 
-import sklearn.model_selection  as ms
-import sklearn.linear_model as lm
-import sklearn.svm as svm
-import sklearn.naive_bayes as naive_bayes
-import sklearn.tree as tree
-
-import GPy
-import torch
-import tensorflow as tf
-
-# Or if it's a statistical analysis
-import scipy.stats"""
-
-"""Address a particular question that arises from the data"""
-
 
 def predict_price_without_distance(conn, latitude, longitude, year, property_type):
+    """ Trains a model which then produces a price prediction for a house taking the parameters given.
+    Model only takes into account the number of each feature surrounding the house.
+    See notebook for more specific details about the model.
+
+    Args:
+       conn: connection to MariaDB database
+       latitude: latitude of house
+       longitude: longitude of house
+       year: year for which house price should be predicted
+       property_type: type of property e.g. 'D' for detached house
+
+    """
     features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
                 "public_transport": [],
                 "leisure": ["park"]}
@@ -35,13 +31,6 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
                                                              box_height,
                                                              distance_from_house, year, features)
     d = d.astype({"longitude": float, "lattitude": float})
-    if len(d) == 0:
-        box_width = 40
-        box_height = 40
-        distance_from_house = 3
-        d = assess.house_price_vs_number_of_features_coordinates(conn, longitude, latitude, property_type, box_width,
-                                                                 box_height, distance_from_house, year, features)
-        d = d.astype({"longitude": float, "lattitude": float})
     d['constant'] = 1
     train, test = train_test_split(d, test_size=0.1)
     column_names = []
@@ -59,8 +48,8 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
     test_features = test[column_names]
     results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']
     test['prediction'] = results
-    prediction_features = assess.number_of_features_surrounding_test(longitude, latitude, box_width, box_height,
-                                                                     distance_from_house, year, features)
+    prediction_features = assess.get_test_features_without_distance(longitude, latitude, box_width, box_height,
+                                                                    distance_from_house, year, features)
     prediction_features['constant'] = 1
     prediction_features = prediction_features[column_names]
     predicted_price = results_basis.get_prediction(prediction_features).summary_frame(alpha=0.05)['mean']
@@ -89,6 +78,18 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
 
 
 def predict_price_with_distance(conn, latitude, longitude, year, property_type):
+    """ Trains a model which then produces a price prediction for a house taking the parameters given.
+    Model only takes into account the number of each feature surrounding the house as well as the distance to each
+    feature for each house (e.g. distance to closest school).
+    See notebook for more specific details about the model.
+
+    Args:
+       conn: connection to MariaDB database
+       latitude: latitude of house
+       longitude: longitude of house
+       year: year for which house price should be predicted
+       property_type: type of property e.g. 'D' for detached house
+    """
     features = {"amenity": ["cafe", "restaurant", "school", "college", "bar"],
                 "public_transport": [],
                 "leisure": ["park"]}
@@ -133,9 +134,9 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     test_features = test[feature_cols]
     results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']
     test['prediction'] = results
-    prediction_features = assess.get_test_features(longitude, latitude, box_width, box_height, distance_from_house,
-                                                   year,
-                                                   features, distance_features)
+    prediction_features = assess.get_test_features_with_distance(longitude, latitude, box_width, box_height, distance_from_house,
+                                                                 year,
+                                                                 features, distance_features)
     prediction_features['constant'] = 1
     prediction_features = prediction_features[feature_cols]
     predicted_price = results_basis.get_prediction(prediction_features).summary_frame(alpha=0.05)['mean']

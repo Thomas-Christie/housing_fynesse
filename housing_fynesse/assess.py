@@ -1,26 +1,24 @@
-from .config import *
 import pandas as pd
 import matplotlib.pyplot as plt
 import osmnx as ox
-import mlai
-import mlai.plot as plot
 import ipywidgets as widgets
 from ipywidgets import interact, fixed
-from . import access
-from sklearn.neighbors import BallTree, KDTree
+from sklearn.neighbors import BallTree
 import numpy as np
-
-"""These are the types of import we might expect in this file
-import pandas
-import bokeh
-import matplotlib.pyplot as plt
-import sklearn.decomposition as decomposition
-import sklearn.feature_extraction"""
-
-"""Place commands in this file to assess the data you have downloaded. How are missing values encoded, how are outliers encoded? What do columns represent, makes rure they are correctly labeled. How is the data indexed. Crete visualisation routines to assess the data (e.g. in bokeh). Ensure that date formats are correct and correctly timezoned."""
 
 
 def execute_sql(conn, sql):
+    """ Executes the SQL command supplied on the MariaDB database
+       specified in the connection.
+
+     Args:
+        conn: connection to MariaDB database
+        sql: sql command to be executed
+
+    Returns:
+        Pandas DataFrame containing the results of the SQL query with the same column
+        names as those in the database
+    """
     try:
         cur = conn.cursor()
         cur.execute(sql)
@@ -34,6 +32,23 @@ def execute_sql(conn, sql):
 
 
 def pois_in_area_coordinates(longitude, latitude, width, height, tags, value=None):
+    """ Returns the positions of interests specified in the tags and (optionally)
+    value fields within the bounding box of the specified dimensions centered at
+    the longitude/latitude provided
+
+    Args:
+       longitude: longitude at center of bounding box
+       latitude: latitude at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       tags: dictionary of tags of features to be used in osmnx query
+             e.g. {"amenity": True, "leisure": True}
+       value: optional argument to specify more specific features
+              e.g. tags = {"amenity": True}, value = "school"
+              will return schools in the bounding box
+    Returns:
+       GeoDataFrame containing specified positions of interest
+    """
     box_width = (width / 40075) * 360
     box_height = (height / 40075) * 360
     north = latitude + box_height / 2
@@ -47,6 +62,18 @@ def pois_in_area_coordinates(longitude, latitude, width, height, tags, value=Non
 
 
 def price_in_box_in_year_coordinates(conn, latitude, longitude, width, height, year):
+    """ Returns the average house price in the bounding box specified for the given year
+
+    Args:
+       conn: connection to MariaDB database
+       latitude: latitude at center of bounding box
+       longitude: longitude at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       year: year in which to find average price
+    Returns:
+       DataFrame containing year and average house price
+    """
     box_width = (width / 40075) * 360
     box_height = (height / 40075) * 360
     north = latitude + box_height / 2
@@ -63,6 +90,17 @@ def price_in_box_in_year_coordinates(conn, latitude, longitude, width, height, y
 
 
 def price_in_box_in_year_postcode(conn, postcode, width, height, year):
+    """ Returns the average house price in the bounding box specified for the given year
+
+    Args:
+       conn: connection to MariaDB database
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       year: year in which to find average price
+    Returns:
+       DataFrame containing year and average house price
+    """
     longitude = float(
         execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
     latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
@@ -81,8 +119,24 @@ def price_in_box_in_year_postcode(conn, postcode, width, height, year):
     return price
 
 
-# Added conn
 def pois_in_area(conn, postcode, width, height, tags, value=None):
+    """ Returns the positions of interests specified in the tags and (optionally)
+        value fields within the bounding box of the specified dimensions centered at
+        the longitude/latitude provided
+
+    Args:
+       conn: connection to MariaDB database
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       tags: dictionary of tags of features to be used in osmnx query
+             e.g. {"amenity": True, "leisure": True}
+       value: optional argument to specify more specific features
+              e.g. tags = {"amenity": True}, value = "school"
+              will return schools in the bounding box
+    Returns:
+       GeoDataFrame containing specified positions of interest
+    """
     longitude = float(
         execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
     latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
@@ -100,8 +154,16 @@ def pois_in_area(conn, postcode, width, height, tags, value=None):
     return pois
 
 
-# Added conn
 def plot_pois(conn, pois, postcode, width, height):
+    """ Uses matplotlib to plot the positions of interest in the given area
+
+    Args:
+       conn: connection to MariaDB database
+       pois: GeoDataFrame containing the positions of interest to be plotted
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+    """
     longitude = float(
         execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
     latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
@@ -127,8 +189,21 @@ def plot_pois(conn, pois, postcode, width, height):
     plt.show()
 
 
-# Added conn
 def view_pois_interactive(conn, postcode, width, height, tags, year, value="None"):
+    """ Creates a widget for visualisation of positions of interest in the given area
+
+    Args:
+       conn: connection to MariaDB database
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       tags: dictionary of tags of features to be used in osmnx query
+             e.g. {"amenity": True, "leisure": True}
+       year: year to be used to calculate average house price in bounding box
+       value: optional argument to specify more specific features
+              e.g. tags = {"amenity": True}, value = "school"
+              will return schools in the bounding box
+    """
     tags_dict = {}
     for tag in tags:
         tags_dict[tag] = True
@@ -143,6 +218,14 @@ def view_pois_interactive(conn, postcode, width, height, tags, year, value="None
 
 
 def year_avg_house_price(conn, start_year, end_year):
+    """ Plots a graph of average house price vs year for each year in the
+        time period specified
+
+    Args:
+       conn: connection to MariaDB database
+       start_year: start year of time period (inclusive)
+       end_year: end year of time period (inclusive)
+    """
     year_prices = execute_sql(conn, f'SELECT year(date_of_transfer) AS year, AVG(price) FROM pp_data '
                                     f'WHERE year(date_of_transfer) BETWEEN {start_year} AND {end_year} GROUP BY year(date_of_transfer)')
     plt.rcParams["figure.figsize"] = (20, 10)
@@ -152,8 +235,25 @@ def year_avg_house_price(conn, start_year, end_year):
     plt.ylabel('average house price')
 
 
-# Added conn
 def house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict):
+    """ Returns a DataFrame containing house price data as well as the number of given features within a bounding
+        box around each house (see notebook for more detailed explanation)
+
+    Args:
+       conn: connection to MariaDB database
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       distance_from_house: width/height in km of square around each house within which features should be counted
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around each house.
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+
+    Returns:
+       DataFrame containing house price data and the number of each of the given features within a bounding box
+       around each house
+    """
     longitude = float(
         execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
     latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
@@ -214,9 +314,28 @@ def house_price_vs_number_of_features(conn, postcode, width, height, distance_fr
     return houses
 
 
-# Added conn
 def house_price_vs_number_of_features_coordinates(conn, longitude, latitude, property_type, width, height,
                                                   distance_from_house, year, features_dict):
+    """ Returns a DataFrame containing house price data as well as the number of given features within a bounding
+        box around each house (see notebook for more detailed explanation)
+
+    Args:
+       conn: connection to MariaDB database
+       longitude: longitude at center of bounding box
+       latitude: latitude at center of bounding box
+       property_type: type of property to select e.g. 'D' for detached houses
+       width: width of bounding box in km
+       height: height of bounding box in km
+       distance_from_house: width/height in km of square around each house within which features should be counted
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around each house.
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+
+    Returns:
+       DataFrame containing house price data and the number of each of the given features within a bounding box
+       around each house
+    """
     box_width = (width / 40075) * 360
     box_height = (height / 40075) * 360
     d = ((distance_from_house / 2) / 40075) * 360
@@ -273,7 +392,26 @@ def house_price_vs_number_of_features_coordinates(conn, longitude, latitude, pro
     return houses
 
 
-def number_of_features_surrounding_test(longitude, latitude, width, height, distance_from_house, year, features_dict):
+def get_test_features_without_distance(longitude, latitude, width, height, distance_from_house, year, features_dict):
+    """ Given the longitude and latitude of a house from the model, this function will calculate the feature
+    values required by the model (e.g. number of schools within a certain distance of the longitude/latitude
+    specified). It will only calculate the number of the given features surrounding the house, and not the distances
+    to the given features
+
+    Args:
+       longitude: longitude at center of bounding box
+       latitude: latitude at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       distance_from_house: width/height in km of square around each house within which features should be counted
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around the house
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+
+    Returns:
+       DataFrame containing features required by the model to predict the price of a house
+    """
     d = ((distance_from_house / 2) / 40075) * 360
     df = pd.DataFrame([[longitude, latitude]], columns=["longitude", "lattitude"])
     for feature, tags in features_dict.items():
@@ -299,8 +437,29 @@ def number_of_features_surrounding_test(longitude, latitude, width, height, dist
     return df
 
 
-def get_test_features(longitude, latitude, width, height, distance_from_house, year, features_dict,
-                      distance_features_dict):
+def get_test_features_with_distance(longitude, latitude, width, height, distance_from_house, year, features_dict,
+                                    distance_features_dict):
+    """ Given the longitude and latitude of a house from the model, this function will calculate the feature
+    values required by the model (e.g. number of schools within a certain distance of the longitude/latitude
+    specified). It will calculate the number of the given features surrounding the house, and also the distances
+    to the given features (e.g. distance to closest school)
+
+    Args:
+       longitude: longitude at center of bounding box
+       latitude: latitude at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       distance_from_house: width/height in km of square around each house within which features should be counted
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around the house
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+       distance_features_dict: dictionary which specifies which positions of interest to measure the distance to around
+                               the house. Same format as "features_dict"
+
+    Returns:
+       DataFrame containing features required by the model to predict the price of a house
+    """
     d = ((distance_from_house / 2) / 40075) * 360
     df = pd.DataFrame([[longitude, latitude]], columns=["longitude", "lattitude"])
     df["latitude_rad"] = np.deg2rad(df["lattitude"].values.astype(float))
@@ -359,9 +518,26 @@ def get_test_features(longitude, latitude, width, height, distance_from_house, y
     return df
 
 
-# Added conn
 def house_price_vs_distance_from_feature_coordinates(conn, longitude, latitude, property_type, width, height, year,
                                                      features_dict):
+    """ Returns a DataFrame containing house price data as well as the distance to the closest feature for each of
+    the given features e.g. distance to closest school (see notebook for more detailed explanation)
+
+    Args:
+       conn: connection to MariaDB database
+       longitude: longitude at center of bounding box
+       latitude: latitude at center of bounding box
+       property_type: type of property to select e.g. 'D' for detached houses
+       width: width of bounding box in km
+       height: height of bounding box in km
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around each house.
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+
+    Returns:
+           DataFrame containing house price data and the distance to the closest feature for each of the given features
+    """
     box_width = (width / 40075) * 360
     box_height = (height / 40075) * 360
     north = latitude + box_height / 2
@@ -404,8 +580,23 @@ def house_price_vs_distance_from_feature_coordinates(conn, longitude, latitude, 
     return houses
 
 
-# Added conn
 def house_price_vs_distance_from_feature(conn, postcode, width, height, year, features_dict):
+    """ Returns a DataFrame containing house price data as well as the distance to the closest feature for each of
+        the given features e.g. distance to closest school (see notebook for more detailed explanation)
+
+    Args:
+       conn: connection to MariaDB database
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around each house.
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+
+    Returns:
+       DataFrame containing house price data and the distance to the closest feature for each of the given features
+    """
     longitude = float(
         execute_sql(conn, f"SELECT longitude FROM postcode_data WHERE postcode='{postcode}'")['longitude'])
     latitude = float(execute_sql(conn, f"SELECT lattitude FROM postcode_data WHERE postcode='{postcode}'")['lattitude'])
@@ -450,6 +641,21 @@ def house_price_vs_distance_from_feature(conn, postcode, width, height, year, fe
 
 def plot_house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict,
                                            max_price):
+    """ Creates a plot of house price against the number of features surrounding each house for the parameters
+    specified
+
+    Args:
+       conn: connection to MariaDB database
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       distance_from_house: width/height in km of square around each house within which features should be counted
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around each house.
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+       max_price: maximum house price to plot
+    """
     data = house_price_vs_number_of_features(conn, postcode, width, height, distance_from_house, year, features_dict)
     data = data[data['price'] < max_price]
     plt.rcParams["figure.figsize"] = (10, 5)
@@ -473,6 +679,20 @@ def plot_house_price_vs_number_of_features(conn, postcode, width, height, distan
 
 
 def plot_house_price_vs_distance_from_feature(conn, postcode, width, height, year, features_dict, max_price):
+    """ Creates a plot of house price against the distance to the closest feature for each house for the parameters
+        specified
+
+    Args:
+       conn: connection to MariaDB database
+       postcode: postcode at center of bounding box
+       width: width of bounding box in km
+       height: height of bounding box in km
+       year: year for which house price data should be selected
+       features_dict: dictionary which specifies which positions of interest to count around each house.
+                      e.g. {"amenity": ["cafe", "restaurant"], "leisure": ["park"]}
+                      see notebook for more details about exact format
+       max_price: maximum house price to plot
+    """
     data = house_price_vs_distance_from_feature(conn, postcode, width, height, year, features_dict)
     data = data[data['price'] < max_price]
     plt.rcParams["figure.figsize"] = (10, 5)
@@ -497,6 +717,11 @@ def plot_house_price_vs_distance_from_feature(conn, postcode, width, height, yea
 
 
 def interactive_viewer(conn):
+    """ Creates a an interactive widget for viewing positions of interest using OpenStreetMaps
+
+    Args:
+       conn: connection to MariaDB database
+    """
     postcode_select = widgets.Text(value='CB2 1RF', placeholder='CB2 1RF', description='Postcode:', disabled=False)
     # Select multiple by holding down shift
     tags_select = widgets.SelectMultiple(
@@ -514,24 +739,3 @@ def interactive_viewer(conn):
                     tags=tags_select,
                     year=year_value,
                     value=value_select)
-
-
-def data():
-    """Load the data from access and ensure missing values are correctly encoded as well as indices correct, column names informative, date and times correctly formatted. Return a structured data structure such as a data frame."""
-    df = access.data()
-    raise NotImplementedError
-
-
-def query(data):
-    """Request user input for some aspect of the data."""
-    raise NotImplementedError
-
-
-def view(data):
-    """Provide a view of the data that allows the user to verify some aspect of its quality."""
-    raise NotImplementedError
-
-
-def labelled(data):
-    """Provide a labelled set of data ready for supervised learning."""
-    raise NotImplementedError

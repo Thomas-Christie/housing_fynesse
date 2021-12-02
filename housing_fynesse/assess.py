@@ -547,7 +547,7 @@ def house_price_vs_distance_from_feature_coordinates(conn, longitude, latitude, 
     houses = execute_sql(conn, f'SELECT * FROM '
                                f'(SELECT * FROM postcode_data WHERE lattitude <= {north} AND lattitude >= {south} AND longitude <= {east} AND longitude >= {west}) AS post '
                                f'INNER JOIN '
-                               f'(SELECT * FROM pp_data WHERE year(date_of_transfer) BETWEEN {year - 1} AND {year + 1} AND property_type = "{property_type}) as pp '
+                               f'(SELECT * FROM pp_data WHERE year(date_of_transfer) BETWEEN {year - 1} AND {year + 1} AND property_type = "{property_type}") as pp '
                                f'ON '
                                f'pp.postcode = post.postcode')
     print("Number of houses: ", len(houses))

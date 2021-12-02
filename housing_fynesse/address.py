@@ -116,19 +116,16 @@ def predict_price_with_distance(conn, latitude, longitude, box_width, box_height
     design = train[feature_cols]
     y = train['price']
     m_linear_basis = sm.GLM(y, design, family=sm.families.Gaussian(link=sm.families.links.log))
-    # results_basis = m_linear_basis.fit()
-    results_basis = m_linear_basis.fit_regularized(alpha=0.10, L1_wt=0.6)
+    results_basis = m_linear_basis.fit()
     test_features = test[feature_cols]
-    # results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']
-    results = results_basis.predict(test_features)
+    results = results_basis.get_prediction(test_features).summary_frame(alpha=0.05)['mean']
     test['prediction'] = results
     prediction_features = assess.get_test_features(longitude, latitude, box_width, box_height, distance_from_house,
                                                    year,
                                                    features, distance_features)
     prediction_features['constant'] = 1
     prediction_features = prediction_features[feature_cols]
-    # predicted_price = results_basis.get_prediction(prediction_features).summary_frame(alpha=0.05)['mean']
-    predicted_price = results_basis.predict(test_features)
+    predicted_price = results_basis.get_prediction(prediction_features).summary_frame(alpha=0.05)['mean']
     prediction_features['pred'] = predicted_price
     plt.rcParams["figure.figsize"] = (20, 10)
     plt.scatter(test['price'], test['prediction'])

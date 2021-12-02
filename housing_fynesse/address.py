@@ -83,7 +83,7 @@ def predict_price_without_distance(conn, latitude, longitude, year, property_typ
     rmse = mean_squared_error(test['price'], test['prediction'], squared=False)
     mape = mean_absolute_percentage_error(test['price'], test['prediction'])
     print("Root Mean Squared Error: ", rmse)
-    print("Mean Absolute Percentage Error: ", mape)
+    print("Mean Absolute Percentage Error: ", mape * 100)
     print("Predicted Price: ", predicted_price)
     return predicted_price
 
@@ -159,6 +159,6 @@ def predict_price_with_distance(conn, latitude, longitude, year, property_type):
     rmse = mean_squared_error(test['price'], test['prediction'], squared=False)
     mape = mean_absolute_percentage_error(test['price'], test['prediction'])
     print("Root Mean Squared Error: ", rmse)
-    print("Mean Absolute Percentage Error: ", mape)
+    print("Mean Absolute Percentage Error: ", mape * 100)
     print("Predicted Price: ", predicted_price)
     return predicted_price
